@@ -29,8 +29,8 @@ def which_cal(start):
     return distance_list[0][1]
 
 
-startx = input("Please input the X coordinate of start point(deafult is 0): ")
-startz = input("Please input the Z coordinate of start point(deafult is 0): ")
+startx = input("Please input the X coordinate of start point: ")
+startz = input("Please input the Z coordinate of start point: ")
 num_path = int(input("Please input the number you want to explore: "))
 while num_path is False:
     print("invalid input")
