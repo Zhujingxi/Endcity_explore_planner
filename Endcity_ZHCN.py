@@ -29,8 +29,8 @@ def which_cal(start):
     return distance_list[0][1]
 
 
-startx = input("请输入起始坐标x(默认为0): ")
-startz = input("请输入起始坐标z(默认为0): ")
+startx = input("请输入起始坐标x: ")
+startz = input("请输入起始坐标z: ")
 num_path = int(input("请输入需要探索的个数: "))
 while num_path is False:
     print("输入不合法")
