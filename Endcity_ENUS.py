@@ -1,4 +1,4 @@
-﻿import math
+import math
 
 start_point = [0 , 0]
 corlist = []
@@ -35,6 +35,9 @@ num_path = int(input("Please input the number you want to explore: "))
 while num_path is False:
     print("invalid input")
     num_path = int(input("Please input the number you want to explore: "))
+shipOrNotIn = str(input("Please input the ship or not you want to explore(Y / N): "))
+if shipOrNotIn == "Y": shipOrNot  = True 
+else: shipOrNot = False
 
 if startx is False:
     pass
@@ -49,15 +52,28 @@ else:
 
 file = open(r".\file.txt")
 file.readline()
+
+readcoutner = 0
 while True:
+    
+    readcoutner += 1
     readline = file.readline()
-    if readline:
-        x,y=readline.split(",",1)
-        x = int(x)
-        y = int(y)
-        corlist.append([x , y])
+    if "end_city" not in readline:
+        if not readline:
+            break
     else:
-        break
+        if readline:
+            seed,type,x,y,details=readline.split(";",4)
+            x = int(x)
+            y = int(y)
+            if shipOrNot:
+                if "ship" in details:
+                    corlist.append([x , y])
+                    print(readline)
+            else:
+                corlist.append([x , y])
+        else:
+            break
 
 
 path.append(corlist[which_cal(start_point)])
