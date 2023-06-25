@@ -8,7 +8,7 @@ def distance_cal(cor1, cor2):
     return math.sqrt((x2 - x1) ** 2 + (z2 - z1) ** 2)
 
 def generate_path(start_point, corlist, num_path):
-    path = [corlist.pop(0)]
+    path = [start_point]
 
     with tqdm(total=num_path - 1) as pbar:
         for _ in range(1, num_path):
@@ -25,12 +25,13 @@ def generate_path(start_point, corlist, num_path):
 
     return path
 
-def plot_points_and_path(corlist, path):
+def plot_points_and_path(corlist, path, start_point):
     x_values, y_values = zip(*corlist)
     path_x_values, path_y_values = zip(*path)
 
     plt.plot(x_values, y_values, 'o', color='lightgray', label='All Points')
     plt.plot(path_x_values, path_y_values, '-o', color='red', label='Path')
+    plt.plot(start_point[0], start_point[1], 'o', color='purple', label='Start Point')
     plt.xlabel('X')
     plt.ylabel('Y')
     plt.title('Path')
@@ -77,7 +78,7 @@ def main():
         for counter, x in enumerate(path, 1):
             output_file.write(f"waypoint:{counter}:{counter}:{x[0]}:100:{x[1]}:11:false:0:gui.xaero_default:false:0:false\n")
 
-    plot_points_and_path(corlist, path)
+    plot_points_and_path(corlist, path, start_point)
 
 if __name__ == "__main__":
     main()
