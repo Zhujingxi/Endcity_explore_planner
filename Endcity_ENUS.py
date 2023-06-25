@@ -1,116 +1,83 @@
 import math
+from tqdm import tqdm
+import matplotlib.pyplot as plt
 
-start_point = [0 , 0]
-corlist = []
-num_path = 0
-path = []
+def distance_cal(cor1, cor2):
+    x1, z1 = cor1
+    x2, z2 = cor2
+    return math.sqrt((x2 - x1) ** 2 + (z2 - z1) ** 2)
 
-already_list = []
+def generate_path(start_point, corlist, num_path):
+    path = [corlist.pop(0)]
 
-def distance_cal (cor1,cor2):
-    x1 = cor1[0]
-    z1 = cor1[1]
-    x2 = cor2[0]
-    z2 = cor2[1]
-    return math.sqrt(((x2-x1)**2)+((z2-z1)**2))
+    with tqdm(total=num_path - 1) as pbar:
+        for _ in range(1, num_path):
+            min_distance = float('inf')
+            min_index = -1
+            for i, cor in enumerate(corlist):
+                dist = distance_cal(path[-1], cor)
+                if dist < min_distance:
+                    min_distance = dist
+                    min_index = i
 
-def which_cal(start):
-    distance_list = []
-    counter = 0
-    for x in corlist:
-        if x in path:
-            pass
-        else:
-            distance_list.append([distance_cal(start,x),counter])
-        counter += 1
+            path.append(corlist.pop(min_index))
+            pbar.update(1)
 
-    distance_list.sort(key=lambda distance_list:distance_list[0])
-    #print("distance",distance_list[0])
-    return distance_list[0][1]
+    return path
 
+def plot_points_and_path(corlist, path):
+    x_values, y_values = zip(*corlist)
+    path_x_values, path_y_values = zip(*path)
 
-startx = input("Please input the X coordinate of start point: ")
-startz = input("Please input the Z coordinate of start point: ")
-num_path = int(input("Please input the number you want to explore: "))
-while num_path is False:
-    print("invalid input")
-    num_path = int(input("Please input the number you want to explore: "))
-shipOrNotIn = str(input("Please input the ship or not you want to explore(Y / N): "))
-if shipOrNotIn == "Y": shipOrNot  = True 
-else: shipOrNot = False
+    plt.plot(x_values, y_values, 'o', color='lightgray', label='All Points')
+    plt.plot(path_x_values, path_y_values, '-o', color='red', label='Path')
+    plt.xlabel('X')
+    plt.ylabel('Y')
+    plt.title('Path')
+    plt.grid(True)
+    plt.legend()
+    plt.show()
 
-if startx is False:
-    pass
-else:
-    start_point[0] = int(startx)
+def main():
+    startx = input("Please input the X coordinate of the start point: ")
+    startz = input("Please input the Z coordinate of the start point: ")
 
-if startz is False:
-    pass
-else:
-    start_point[1] = int(startz)
+    start_point = [int(startx) if startx else 0, int(startz) if startz else 0]
 
+    try:
+        num_path = int(input("Please input the number of paths you want to explore: "))
+    except ValueError:
+        print("Invalid input. Please enter a valid number.")
+        exit(1)
 
-file = open(r".\file.txt")
-file.readline()
+    shipOrNotIn = input("Please input 'Y' if you want to explore the ship, or 'N' otherwise: ")
+    shipOrNot = shipOrNotIn.upper() == "Y"
 
-readcoutner = 0
-while True:
-    
-    readcoutner += 1
-    readline = file.readline()
-    if "end_city" not in readline:
-        if not readline:
-            break
-    else:
-        if readline:
-            seed,type,x,y,details=readline.split(";",4)
-            x = int(x)
-            y = int(y)
-            if shipOrNot:
-                if "ship" in details:
-                    corlist.append([x , y])
-                    print(readline)
-            else:
-                corlist.append([x , y])
-        else:
-            break
+    corlist = []
 
+    with open("file.txt") as file:
+        file.readline()
+        for line in file:
+            if "end_city" in line:
+                seed, type, x, y, details = line.split(";", 4)
+                x, y = int(x), int(y)
+                if shipOrNot and "ship" in details or not shipOrNot:
+                    corlist.append([x, y])
+                    if shipOrNot:
+                        print(line)
 
-path.append(corlist[which_cal(start_point)])
+    path = generate_path(start_point, corlist, num_path)
 
-coutner = 1
-while coutner < num_path:
-    path.append(corlist[which_cal(path[-1])])
-    coutner += 1
+    total_distance = sum(distance_cal(path[i], path[i+1]) for i in range(len(path)-1))
+    distance_ratio = total_distance / num_path
+    print(f"Total Distance: {total_distance:.2f}")
+    print(f"Distance Ratio: {distance_ratio:.2f}")
 
-coutner = 1
+    with open("output.txt", "w") as output_file:
+        for counter, x in enumerate(path, 1):
+            output_file.write(f"waypoint:{counter}:{counter}:{x[0]}:100:{x[1]}:11:false:0:gui.xaero_default:false:0:false\n")
 
-output_file = open(r'.\output.txt', 'w')
+    plot_points_and_path(corlist, path)
 
-for x in path:
-    print("waypoint:", end='')
-    output_file.write("waypoint:")
-    print(coutner, end='')
-    output_file.write(str(coutner))
-    print(":", end='')
-    output_file.write(":")
-    print(coutner, end = '')
-    output_file.write(str(coutner))
-    print(":", end = '')
-    output_file.write(":")
-    print(x[0], end = '')
-    output_file.write(str(x[0]))
-    print(":100:", end='')
-    output_file.write(":100:")
-    print(x[1], end = '')
-    output_file.write(str(x[1]))
-    print(":", end='')
-    output_file.write(":")
-    print("11", end='')
-    output_file.write("11")
-    print(":false:0:gui.xaero_default:false:0:false", end='')
-    output_file.write(":false:0:gui.xaero_default:false:0:false")
-    print()
-    output_file.write('\n')
-    coutner += 1
-output_file.close()
+if __name__ == "__main__":
+    main()
