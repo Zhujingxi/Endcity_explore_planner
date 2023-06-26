@@ -1,6 +1,8 @@
 import math
 from tqdm import tqdm
 import matplotlib.pyplot as plt
+import zipfile
+from openpyxl import Workbook
 
 def distance_cal(cor1, cor2):
     x1, z1 = cor1
@@ -39,6 +41,25 @@ def plot_points_and_path(corlist, path, start_point):
     plt.legend()
     plt.show()
 
+def write_waypoints_to_file(waypoints, filename):
+    with open(filename, "w") as output_file:
+        for counter, x in enumerate(waypoints, 1):
+            output_file.write(f"waypoint:{counter}:{counter}:{x[0]}:100:{x[1]}:11:false:0:gui.xaero_default:false:0:false\n")
+
+def create_index_excel(files):
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Index"
+
+    ws.cell(row=1, column=1, value="File Name")
+    ws.cell(row=1, column=2, value="Number of Waypoints")
+
+    for i, file in enumerate(files, 2):
+        ws.cell(row=i, column=1, value=file)
+        ws.cell(row=i, column=2, value=len(files[file]))
+
+    return wb
+
 def main():
     startx = input("Please input the X coordinate of the start point: ")
     startz = input("Please input the Z coordinate of the start point: ")
@@ -74,9 +95,23 @@ def main():
     print(f"Total Distance: {total_distance:.2f}")
     print(f"Distance Ratio: {distance_ratio:.2f}")
 
-    with open("output.txt", "w") as output_file:
-        for counter, x in enumerate(path, 1):
-            output_file.write(f"waypoint:{counter}:{counter}:{x[0]}:100:{x[1]}:11:false:0:gui.xaero_default:false:0:false\n")
+    num_files = len(path) // 100
+    if len(path) % 100 != 0:
+        num_files += 1
+
+    files = {}
+    for i in range(num_files):
+        waypoints = path[i * 100: (i + 1) * 100]
+        filename = f"output_{i+1}.txt"
+        files[filename] = waypoints
+        write_waypoints_to_file(waypoints, filename)
+
+    with zipfile.ZipFile("output.zip", "w") as zipf:
+        for file in files:
+            zipf.write(file)
+
+    index_wb = create_index_excel(files)
+    index_wb.save("index.xlsx")
 
     plot_points_and_path(corlist, path, start_point)
 
